@@ -105,22 +105,27 @@ td.c,th.c{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hint{font-size:13.5px;color:var(--muted);margin:0}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:90vw}
 .toast:empty{display:none}
+.abody{display:flex;flex-direction:column;gap:22px}
+.abody[hidden]{display:none}
+.btn.danger{border-color:var(--warn);color:var(--warn);background:var(--surface);font-weight:500;padding:3px 9px;font-size:12.5px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <h1>MC 교육 희망 조사</h1>
-  <p>듣고 싶은 교육 과정을 1지망부터 5지망까지 골라 주세요. 과정 설명을 먼저 보고, 지망 제출 탭의 설문에서 제출하면 됩니다.</p>
+  <p>듣고 싶은 교육 과정을 1지망부터 5지망까지 골라 주세요. 과정 설명을 먼저 보고, 지망 선택 탭에서 제출하면 됩니다.</p>
 </header>
 <nav class="tabs" aria-label="화면 이동">
   <a href="#courses" data-v="courses">① 과정 소개</a>
-  <a href="#survey" data-v="survey">② 지망 제출</a>
-  <a href="#admin" data-v="admin">③ 관리자</a>
+  <a href="#survey" data-v="survey">② 지망 선택</a>
+  <a href="#results" data-v="results">③ 집계 결과</a>
+  <a href="#admin" data-v="admin">관리자</a>
 </nav>
+<div class="msg warn" id="conn"></div>
 
 <div class="view" id="v-courses">
-  <p class="hint">33개 과정입니다. 과정마다 <b>[AI1]</b> 같은 코드가 붙어 있고, 설문의 선택지에도 같은 코드가 있습니다. <b>참가 자격 확인 필요</b> 표시가 있는 과정은 제약·바이오 기업 재직자 대상이어서 수강이 안 될 수 있습니다. 그래도 희망하면 지망에 넣어 주세요.</p>
+  <p class="hint">33개 과정입니다. 마음에 드는 과정의 <b>지망에 추가</b>를 누르면 지망 선택 탭의 빈 칸에 차례로 들어갑니다. <b>참가 자격 확인 필요</b> 표시가 있는 과정은 제약·바이오 기업 재직자 대상이어서 수강이 안 될 수 있습니다. 그래도 희망하면 지망에 넣어 주세요.</p>
   <div class="filters" id="filters">
     <div class="frow"><span class="lab">유형</span><span id="f-cat" class="frow"></span></div>
     <div class="frow"><span class="lab">직급</span><span id="f-lv" class="frow"></span></div>
@@ -131,60 +136,94 @@ td.c,th.c{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 <div class="view" id="v-survey">
   <div class="panel step">
-    <h2>지망 제출</h2>
-    <p class="hint">제출은 회사 Microsoft Forms 설문에서 합니다. 이름을 적고 1지망부터 5지망까지 고른 뒤 제출을 누르면 끝입니다. 1지망만 필수이고, 같은 과정을 두 번 고르지 않도록 해 주세요. 다시 제출하면 나중에 낸 응답이 반영됩니다.</p>
-    <div class="field"><a class="btn" id="formlink" href="#survey" target="_blank" rel="noopener" style="text-decoration:none">설문 열기 (Microsoft Forms)</a><span class="hint" id="formnote"></span></div>
+    <h2><span>1</span>이름</h2>
+    <div class="field">
+      <label for="nm">이름</label>
+      <input type="text" id="nm" placeholder="예: 홍길동" maxlength="20" autocomplete="off">
+    </div>
+    <p class="hint">이름은 띄어쓰기 없이 정확히 적어 주세요. 같은 이름으로 다시 제출하면 이전 응답을 덮어씁니다.</p>
+  </div>
+  <div class="panel step">
+    <h2><span>2</span>지망 선택 (1지망은 필수)</h2>
+    <p class="hint">같은 과정은 한 번만 고를 수 있습니다. 5개를 다 채우지 않아도 됩니다.</p>
+    <div id="picks" class="step"></div>
+  </div>
+  <div class="panel step">
+    <h2><span>3</span>팀 공용으로 있으면 좋을 온라인 강의 (선택)</h2>
+    <p class="hint">아래는 한 번 결제하면 기간 제한 없이 볼 수 있는 온라인 강의입니다. 팀이 함께 쓸 수 있으면 좋겠다고 생각하는 과정에 표시해 주세요. 위 지망과 별개로 여러 개 고를 수 있습니다. 강의 플랫폼이 아이디 공유를 금지하고 있어, 표시가 많은 과정부터 기업 단체 수강권 견적을 받는 데 씁니다.</p>
+    <div class="checks" id="shared"></div>
+  </div>
+  <div class="panel step">
+    <h2><span>4</span>의견 (선택)</h2>
+    <textarea id="memo" maxlength="500" placeholder="목록에 없는 희망 과정, 일정상 제약 등"></textarea>
+    <div class="field">
+      <button class="btn" id="submit" type="button">제출하기</button>
+      <span class="hint" id="mine"></span>
+    </div>
+    <div class="msg" id="smsg"></div>
+  </div>
+</div>
+
+<div class="view" id="v-results">
+  <div class="field"><p class="hint" id="r-meta">집계를 불러오는 중입니다.</p><button class="btn ghost" id="r-reload" type="button">새로 고침</button></div>
+  <div class="panel">
+    <h2 style="margin-bottom:6px">과정별 선호 순위</h2>
+    <p class="hint" style="margin-bottom:10px">점수는 1지망 5점, 2지망 4점, 3지망 3점, 4지망 2점, 5지망 1점을 더한 값입니다. 누가 무엇을 골랐는지는 표시하지 않습니다.</p>
+    <div class="tbl-scroll" id="r-rank"></div>
   </div>
   <div class="panel">
-    <h2 style="margin-bottom:10px">과정 코드 한눈에 보기</h2>
-    <div class="tbl-scroll" id="codelist"></div>
+    <h2 style="margin-bottom:10px">팀 공용 희망 강의</h2>
+    <div class="tbl-scroll" id="r-shared"></div>
   </div>
 </div>
 
 <div class="view" id="v-admin">
-  <p class="hint">관리자용 화면입니다. 여기에 넣은 명단과 응답은 이 컴퓨터의 이 브라우저에만 저장되고 인터넷으로 나가지 않습니다.</p>
   <div class="panel step">
-    <h2><span>1</span>직급 명단</h2>
-    <p class="hint">한 줄에 이름과 직급을 띄어 적습니다. 예: 홍길동 SC. 명단에 없는 이름은 직급이 '기타'로 잡힙니다.</p>
-    <textarea id="roster" rows="6" placeholder="홍길동 SC"></textarea>
-  </div>
-  <div class="panel step">
-    <h2><span>2</span>설문 결과 넣기</h2>
-    <p class="hint">Microsoft Forms의 응답 화면에서 내려받은 엑셀 파일을 선택합니다. 파일 선택이 안 되면, 엑셀에서 제목 줄을 포함해 전체를 복사한 뒤 아래 칸에 붙여넣고 붙여넣은 내용 읽기를 누릅니다. 새로 넣으면 이전 내용은 바뀝니다.</p>
+    <h2>관리자 확인</h2>
     <div class="field">
-      <label for="afile" class="btn">엑셀 파일 선택</label>
-      <input type="file" id="afile" accept=".xlsx,.xls,.csv" hidden>
-      <button class="btn ghost" id="aclear" type="button">모든 응답 지우기</button>
+      <label for="akey">관리자 키</label>
+      <input type="password" id="akey" autocomplete="off">
+      <button class="btn" id="aload" type="button">응답 불러오기</button>
     </div>
-    <textarea id="paste" rows="3" placeholder="엑셀에서 복사한 표를 여기에 붙여넣기"></textarea>
-    <div class="field"><button class="btn ghost" id="apaste" type="button">붙여넣은 내용 읽기</button></div>
+    <p class="hint">관리자 키는 Supabase 설정 때 화면에 나온 12자리 값입니다. 이 컴퓨터에서 한 번 넣으면 기억합니다.</p>
     <div class="msg" id="a-sync"></div>
   </div>
-  <div class="panel">
-    <div class="field" style="justify-content:space-between;margin-bottom:10px">
-      <h2>응답 전체</h2>
-      <span class="field"><button class="btn" id="xlsx" type="button">분석 엑셀 다운로드</button><button class="btn ghost" id="copy" type="button">표 복사</button></span>
+  <div id="a-body" hidden class="abody">
+    <div class="panel step">
+      <h2>조사 운영</h2>
+      <div class="field"><span class="hint" id="a-state"></span><button class="btn ghost" id="aclose" type="button">조사 마감하기</button></div>
+      <label for="roster" style="font-weight:700">직급 명단</label>
+      <p class="hint">한 줄에 이름과 직급을 띄어 적습니다. 예: 홍길동 SC. 저장하면 어느 컴퓨터에서 열어도 같은 명단이 쓰입니다. 명단에 없는 이름은 직급이 '기타'로 잡힙니다.</p>
+      <textarea id="roster" rows="6" placeholder="홍길동 SC"></textarea>
+      <div class="field"><button class="btn ghost" id="rsave" type="button">명단 저장</button><span class="hint" id="rmsg"></span></div>
     </div>
-    <div class="tbl-scroll" id="a-rows"></div>
-    <textarea id="copybox" hidden readonly></textarea>
-  </div>
-  <div class="panel">
-    <h2 style="margin-bottom:10px">과정별 분석</h2>
-    <div class="frow" style="margin-bottom:12px"><span class="lab">직급</span><span id="a-rank" class="frow"></span></div>
-    <div class="tbl-scroll" id="a-course"></div>
-  </div>
-  <div class="panel">
-    <h2 style="margin-bottom:6px">직급별 요약과 예산</h2>
-    <p class="hint" style="margin-bottom:10px">비용 합계는 각자가 고른 과정의 인당 비용을 더한 값입니다. 비용이 공개되지 않은 과정은 합계에서 빠지고 건수만 셉니다.</p>
-    <div class="tbl-scroll" id="a-budget"></div>
+    <div class="panel">
+      <h2 style="margin-bottom:10px">과정별 분석</h2>
+      <div class="frow" style="margin-bottom:12px"><span class="lab">직급</span><span id="a-rank" class="frow"></span></div>
+      <div class="tbl-scroll" id="a-course"></div>
+    </div>
+    <div class="panel">
+      <h2 style="margin-bottom:6px">직급별 요약과 예산</h2>
+      <p class="hint" style="margin-bottom:10px">비용 합계는 각자가 고른 과정의 인당 비용을 더한 값입니다. 비용이 공개되지 않은 과정은 합계에서 빠지고 건수만 셉니다.</p>
+      <div class="tbl-scroll" id="a-budget"></div>
+    </div>
+    <div class="panel">
+      <div class="field" style="justify-content:space-between;margin-bottom:10px">
+        <h2>응답 전체</h2>
+        <span class="field"><button class="btn" id="xlsx" type="button">엑셀 파일 다운로드</button><button class="btn ghost" id="copy" type="button">표 복사</button></span>
+      </div>
+      <div class="tbl-scroll" id="a-rows"></div>
+      <textarea id="copybox" hidden readonly></textarea>
+    </div>
   </div>
 </div>
 
 <footer class="panel">
   <strong style="color:var(--ink)">안내</strong>
   <ul>
-    <li>응답은 Microsoft Forms에 저장되며, 이름별 지망 내용은 설문을 만든 관리자만 볼 수 있습니다.</li>
-    <li>패스트캠퍼스는 아이디 하나를 여러 명이 공유하는 것을 금지합니다. 팀 공용 희망 문항은 기업 단체 수강권을 살 과정을 고르는 데 씁니다.</li>
+    <li>응답은 이름당 1건이 저장됩니다. 같은 이름으로 다시 제출하면 이전 응답을 덮어씁니다.</li>
+    <li>이름별 지망 내용은 관리자만 볼 수 있고, 집계 결과 탭에는 과정별 합계만 나옵니다.</li>
+    <li>패스트캠퍼스는 아이디 하나를 여러 명이 공유하는 것을 금지합니다. 팀 공용 희망 표시는 기업 단체 수강권을 살 과정을 고르는 데 씁니다.</li>
     <li>과정 정보는 2026년 11월 25일 조사·검증 기준입니다. 주황색 메모와 표시는 확인이 더 필요한 항목입니다.</li>
   </ul>
 </footer>
@@ -560,21 +599,35 @@ function summaryTable(){
   return h+'<tr><td><b>합계</b></td><td class="c"><b>'+P.length+'</b></td><td class="c"><b>'+P.filter(p=>p.av==="now").length+'</b></td><td class="c"><b>'+P.filter(p=>p.av==="elig").length+'</b></td><td class="c"></td><td class="c"><b>'+(P.length-w.length)+'</b></td></tr></tbody></table>';
 }
 
+const SB_URL=String(window.SUPABASE_URL||"").trim().replace(/\/+$/,""),SB_KEY=String(window.SUPABASE_KEY||"").trim();
+const EP=(/^https:\/\/\S+$/.test(SB_URL)&&SB_KEY.length>20)?SB_URL:"";
+async function rpc(fn,args){
+  const h={"Content-Type":"application/json","apikey":SB_KEY};
+  if(SB_KEY.startsWith("eyJ"))h.Authorization="Bearer "+SB_KEY;
+  const r=await fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:h,body:JSON.stringify(args||{})});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok){const e=new Error((j&&(j.message||j.hint))||("HTTP "+r.status));e.status=r.status;throw e}
+  return j||{};
+}
 const W=[5,4,3,2,1];
-const FORM=(window.FORM_URL||"").trim();
-const code=p=>"["+p.id.toUpperCase()+"]";
 const short=p=>p.n.length>44?p.n.slice(0,43)+"…":p.n;
 let toastT;function toast(t){$("toast").textContent=t;clearTimeout(toastT);toastT=setTimeout(()=>{$("toast").textContent=""},2600)}
-const VIEWS=["courses","survey","admin"];
+const VIEWS=["courses","survey","results","admin"];
 function route(){
   let v=(location.hash||"").slice(1);if(!VIEWS.includes(v))v="courses";
   VIEWS.forEach(k=>$("v-"+k).classList.toggle("on",k===v));
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(v==="results")loadSummary();
 }
 window.addEventListener("hashchange",route);
+const draft={picks:[null,null,null,null,null],shared:new Set()};
 
 /* ① 과정 소개 */
 const state={cat:"all",lv:"all",av:"all"};
+function card(p){
+  const slot=draft.picks.indexOf(p.id);
+  return cardHTML(p,'<div><button type="button" class="btn ghost" data-add="'+p.id+'">'+(slot>=0?(slot+1)+'지망에 담김 (누르면 빼기)':'＋ 지망에 추가')+'</button></div>');
+}
 function drawCourses(){
   chips($("f-cat"),"cat",[["all","전체"],...CATS.map(([k,t])=>[k,t.replace(/ \(.*\)/,"")])],state,drawCourses);
   chips($("f-lv"),"lv",[["all","전체"],["J",LV.J],["M",LV.M],["S",LV.S]],state,drawCourses);
@@ -584,62 +637,81 @@ function drawCourses(){
   let h="";
   CATS.forEach(([k,t])=>{
     const g=hit.filter(p=>p.c===k);if(!g.length)return;
-    h+='<section class="cat" style="margin-bottom:32px"><div class="cat-head"><h2>'+t+'</h2><small>'+g.length+'개 과정</small></div><div class="grid">'+g.map(p=>cardHTML(p,'<div class="hint">설문 선택지 코드 <b style="color:var(--ink)">'+code(p)+'</b></div>')).join("")+'</div></section>';
+    h+='<section class="cat" style="margin-bottom:32px"><div class="cat-head"><h2>'+t+'</h2><small>'+g.length+'개 과정</small></div><div class="grid">'+g.map(card).join("")+'</div></section>';
   });
   $("list").innerHTML=h||'<p class="empty">조건에 맞는 과정이 없습니다. 필터를 전체로 바꿔 보세요.</p>';
 }
+$("list").addEventListener("click",e=>{
+  const b=e.target.closest("[data-add]");if(!b)return;
+  const id=b.dataset.add,at=draft.picks.indexOf(id);
+  if(at>=0){draft.picks[at]=null;toast((at+1)+"지망에서 뺐습니다")}
+  else{
+    const free=draft.picks.indexOf(null);
+    if(free<0){toast("5지망까지 모두 찼습니다. 지망 선택 탭에서 바꿔 주세요");return}
+    draft.picks[free]=id;toast((free+1)+"지망에 담았습니다");
+  }
+  drawCourses();drawPicks();
+});
 
-/* ② 지망 제출 */
-function drawSurvey(){
-  if(/^https:\/\//.test(FORM)){$("formlink").href=FORM}
-  else{$("formlink").removeAttribute("target");$("formnote").textContent="설문 주소가 아직 연결되지 않았습니다. 관리자에게 알려 주세요."}
-  $("codelist").innerHTML='<table><thead><tr><th>코드</th><th>과정</th><th>유형</th><th class="c">인당 비용</th><th>수강 가능</th></tr></thead><tbody>'
-    +P.map(p=>'<tr><td class="num"><b>'+code(p)+'</b></td><td>'+esc(p.n)+'</td><td>'+esc(CATS.find(c=>c[0]===p.c)[1].replace(/^\d+\. /,"").replace(/ \(.*\)/,""))+'</td><td class="c">'+won(WON[p.id])+'</td><td>'+AVL[p.av]+'</td></tr>').join("")+'</tbody></table>';
+/* ② 지망 선택 */
+function drawPicks(){
+  const box=$("picks");box.innerHTML="";
+  for(let i=0;i<5;i++){
+    const row=document.createElement("div");row.className="field";
+    const lab=document.createElement("label");lab.htmlFor="pick"+i;lab.textContent=(i+1)+"지망";
+    const s=document.createElement("select");s.id="pick"+i;s.className="pick";
+    let h='<option value="">선택 안 함</option>';
+    CATS.forEach(([k,t])=>{
+      h+='<optgroup label="'+t+'">'+P.filter(p=>p.c===k).map(p=>{
+        const taken=draft.picks.includes(p.id)&&draft.picks[i]!==p.id;
+        return '<option value="'+p.id+'"'+(draft.picks[i]===p.id?" selected":"")+(taken?" disabled":"")+'>'+esc(short(p))+(taken?" (다른 지망에서 선택)":"")+'</option>';
+      }).join("")+'</optgroup>';
+    });
+    s.innerHTML=h;
+    s.addEventListener("change",()=>{draft.picks[i]=s.value||null;drawPicks();drawCourses()});
+    row.append(lab,s);box.appendChild(row);
+  }
 }
-
-/* ③ 관리자 */
-let rows=[],roster={};const aState={rank:"all"};
-const rk=r=>roster[String(r.name||"").replace(/\s+/g,"")]||"기타";
-function readRoster(){
-  roster={};
-  $("roster").value.split(/\n/).forEach(l=>{const m=l.trim().match(/^(\S+)\s+(.+)$/);if(m)roster[m[1]]=m[2].trim().slice(0,20)});
-}
-function saveAdmin(){try{localStorage.setItem("mcSurveyRows",JSON.stringify(rows));localStorage.setItem("mcSurveyRoster",$("roster").value)}catch(e){}}
-const idsIn=v=>{const out=[];(String(v==null?"":v).match(/\[([A-Za-z]{2}\d{1,2})\]/g)||[]).forEach(x=>{const id=x.slice(1,-1).toLowerCase();if(byId[id]&&!out.includes(id))out.push(id)});return out};
-function importTable(aoa){
-  aoa=(aoa||[]).filter(r=>Array.isArray(r)&&r.some(c=>String(c==null?"":c).trim()!==""));
-  const hi=aoa.findIndex(r=>r.some(c=>/1\s*지망/.test(String(c))));
-  if(hi<0){$("a-sync").textContent="제목 줄에서 '1지망' 열을 찾지 못했습니다. Forms에서 내려받은 엑셀이 맞는지, 제목 줄을 포함했는지 확인해 주세요.";return}
-  const H=aoa[hi].map(c=>String(c==null?"":c));
-  const col=re=>H.findIndex(h=>re.test(h));
-  const cName=col(/이름/),cPick=[1,2,3,4,5].map(n=>col(new RegExp(n+"\\s*지망"))),cSh=col(/공용/),cMemo=col(/의견/),cAt=col(/완료 시간|Completion time|제출/);
-  if(cName<0){$("a-sync").textContent="제목 줄에서 '이름' 열을 찾지 못했습니다.";return}
-  const map=new Map();let skipped=0;
-  aoa.slice(hi+1).forEach((r,k)=>{
-    const name=String(r[cName]==null?"":r[cName]).replace(/\s+/g,"").slice(0,20);
-    const picks=[];cPick.forEach(c=>{if(c>=0)idsIn(r[c]).slice(0,1).forEach(id=>{if(!picks.includes(id))picks.push(id)})});
-    if(!name||!picks.length){skipped++;return}
-    map.set(name,{name,picks,shared:cSh>=0?idsIn(r[cSh]).filter(isUnl):[],memo:cMemo>=0?String(r[cMemo]==null?"":r[cMemo]).slice(0,500):"",at:cAt>=0?String(r[cAt]==null?"":r[cAt]):String(k+1)});
+function drawShared(){
+  const box=$("shared");box.innerHTML="";
+  UNL.forEach(p=>{
+    const l=document.createElement("label"),c=document.createElement("input");
+    c.type="checkbox";c.id="sh-"+p.id;c.checked=draft.shared.has(p.id);
+    c.addEventListener("change",()=>{c.checked?draft.shared.add(p.id):draft.shared.delete(p.id)});
+    const t=document.createElement("span");t.textContent=p.n+" ("+p.o.replace(/ \(.*\)/,"")+")";
+    l.append(c,t);box.appendChild(l);
   });
-  rows=[...map.values()];saveAdmin();drawAdmin();
-  $("a-sync").textContent="응답 "+rows.length+"명을 읽었습니다."+(skipped?" 이름이나 1지망이 없는 줄 "+skipped+"건은 건너뛰었습니다.":"")+" 같은 이름은 마지막 응답만 남겼습니다.";
 }
-$("afile").addEventListener("change",async e=>{
-  const f=e.target.files[0];if(!f)return;
-  if(!window.XLSX){$("a-sync").textContent="이 네트워크에서는 엑셀 파일을 직접 읽을 수 없습니다. 엑셀에서 표를 복사해 아래 칸에 붙여넣어 주세요.";return}
+function smsg(t,warn){const m=$("smsg");m.textContent=t;m.classList.toggle("warn",!!warn)}
+async function submit(){
+  const name=$("nm").value.replace(/\s+/g,"").slice(0,20),picks=draft.picks.filter(Boolean),shared=[...draft.shared].filter(isUnl);
+  if(!name){smsg("이름을 입력해 주세요.",true);return}
+  if(!draft.picks[0]){smsg("1지망을 골라 주세요.",true);return}
+  if(!EP){smsg("응답 저장소가 아직 연결되지 않았습니다. 관리자에게 알려 주세요.",true);return}
+  const b=$("submit");b.disabled=true;smsg("제출하는 중입니다.");
+  let ok=false,why="";
+  try{const j=await rpc("submit_survey",{p_name:name,p_picks:picks,p_shared:shared,p_memo:$("memo").value.slice(0,500)});ok=!!j.ok;why=j.error||""}
+  catch(e){why=e.status===404?"setup":"network"}
+  b.disabled=false;
+  if(ok){
+    draft.picks=[...picks,null,null,null,null,null].slice(0,5);drawPicks();drawCourses();
+    smsg("제출했습니다. 내용을 바꾸려면 고친 뒤 같은 이름으로 다시 제출하면 됩니다.");
+    try{localStorage.setItem("mcSurveyDraft",JSON.stringify({name,picks,shared,memo:$("memo").value}))}catch(e){}
+    $("mine").textContent="이 기기에 내 응답을 기억해 두었습니다.";
+  }else smsg(why==="closed"?"조사가 마감되었습니다.":why==="invalid"?"이름과 1지망을 확인해 주세요.":why==="full"?"응답 수 한도를 넘었습니다. 관리자에게 알려 주세요.":why==="setup"?"응답 저장소 설정이 끝나지 않았습니다. 관리자에게 알려 주세요.":"제출하지 못했습니다. 회사 네트워크에서 저장소가 막혔을 수 있습니다. 잠시 뒤 다시 누르고, 계속 안 되면 관리자에게 알려 주세요.",true);
+}
+$("submit").addEventListener("click",submit);
+function loadMine(){
   try{
-    const wb=XLSX.read(await f.arrayBuffer(),{type:"array",cellDates:true});
-    importTable(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:""}));
-  }catch(x){$("a-sync").textContent="파일을 읽지 못했습니다. 엑셀에서 표를 복사해 아래 칸에 붙여넣어 주세요."}
-  e.target.value="";
-});
-$("apaste").addEventListener("click",()=>{importTable($("paste").value.split(/\r?\n/).map(l=>l.split("\t")));$("paste").value=""});
-let armClear=false;
-$("aclear").addEventListener("click",()=>{
-  if(!armClear){armClear=true;$("aclear").textContent="정말 지우기 (한 번 더 누르기)";return}
-  armClear=false;$("aclear").textContent="모든 응답 지우기";rows=[];saveAdmin();drawAdmin();$("a-sync").textContent="응답을 모두 지웠습니다.";
-});
-$("roster").addEventListener("input",()=>{readRoster();saveAdmin();drawAdmin()});
+    const d=JSON.parse(localStorage.getItem("mcSurveyDraft")||"null");if(!d)return;
+    $("nm").value=String(d.name||"");
+    draft.picks=[...(d.picks||[]).filter(x=>byId[x]),null,null,null,null,null].slice(0,5);
+    draft.shared=new Set((d.shared||[]).filter(isUnl));$("memo").value=String(d.memo||"");
+    $("mine").textContent="이 기기에서 이전에 제출한 응답을 불러왔습니다.";
+  }catch(e){}
+}
+
+/* ③ 집계 */
 function tally(list){
   const t={};
   list.forEach(r=>{
@@ -648,24 +720,73 @@ function tally(list){
   });
   return t;
 }
-function rankTable(t){
-  const ids=P.map(p=>p.id).filter(id=>t[id]).sort((a,b)=>t[b][0]-t[a][0]||t[b][1]-t[a][1]||t[b][6]-t[a][6]);
+function rankTable(t,extra){
+  const ids=P.map(p=>p.id).filter(id=>Array.isArray(t[id])&&t[id][0]>0).sort((a,b)=>t[b][0]-t[a][0]||t[b][1]-t[a][1]);
   if(!ids.length)return '<p class="empty">아직 집계할 응답이 없습니다.</p>';
-  const max=Math.max(1,t[ids[0]][0]);let tot=0;
-  let h='<table><thead><tr><th>순위</th><th>과정</th><th class="c">점수</th><th></th><th class="c">1지망</th><th class="c">2</th><th class="c">3</th><th class="c">4</th><th class="c">5</th><th class="c">선택 인원</th><th class="c">인당 비용</th><th class="c">인원×비용</th><th class="c">팀 공용 희망</th></tr></thead><tbody>';
+  const max=t[ids[0]][0];let tot=0;
+  let h='<table><thead><tr><th>순위</th><th>과정</th><th class="c">점수</th><th></th><th class="c">1지망</th><th class="c">2</th><th class="c">3</th><th class="c">4</th><th class="c">5</th><th class="c">선택 인원</th>'+(extra?'<th class="c">인당 비용</th><th class="c">인원×비용</th><th class="c">팀 공용 희망</th>':'')+'</tr></thead><tbody>';
   ids.forEach((id,i)=>{
-    const x=t[id],p=byId[id],n=x[1]+x[2]+x[3]+x[4]+x[5],w=WON[id];if(w!=null)tot+=w*n;
-    h+='<tr><td class="num">'+(i+1)+'</td><td>'+code(p)+' '+esc(p.n)+'<br><span class="src">'+esc(CATS.find(c=>c[0]===p.c)[1])+'</span></td><td class="c"><b>'+x[0]+'</b></td><td class="barcell"><div class="bar" style="width:'+Math.round(x[0]/max*100)+'%"></div></td>'
-      +[1,2,3,4,5].map(k=>'<td class="c">'+(x[k]||"")+'</td>').join("")+'<td class="c">'+n+'</td><td class="c">'+won(w)+'</td><td class="c">'+(w==null?"미공개":won(w*n))+'</td><td class="c">'+(x[6]||"")+'</td></tr>';
+    const x=t[id].map(Number),p=byId[id],n=x[1]+x[2]+x[3]+x[4]+x[5],w=WON[id];
+    if(w!=null)tot+=w*n;
+    h+='<tr><td class="num">'+(i+1)+'</td><td>'+esc(p.n)+'<br><span class="src">'+esc(CATS.find(c=>c[0]===p.c)[1])+'</span></td><td class="c"><b>'+x[0]+'</b></td><td class="barcell"><div class="bar" style="width:'+Math.round(x[0]/max*100)+'%"></div></td>'
+      +[1,2,3,4,5].map(k=>'<td class="c">'+(x[k]||"")+'</td>').join("")+'<td class="c">'+n+'</td>'
+      +(extra?'<td class="c">'+won(w)+'</td><td class="c">'+(w==null?"미공개":won(w*n))+'</td><td class="c">'+(x[6]||"")+'</td>':'')+'</tr>';
   });
-  return h+'<tr><td></td><td><b>합계 (비용 공개 과정만)</b></td><td colspan="9"></td><td class="c"><b>'+won(tot)+'</b></td><td></td></tr></tbody></table>';
+  if(extra)h+='<tr><td></td><td><b>합계 (비용 공개 과정만)</b></td><td colspan="9"></td><td class="c"><b>'+won(tot)+'</b></td><td></td></tr>';
+  return h+'</tbody></table>';
 }
+function sharedTable(t){
+  const ids=UNL.map(p=>p.id).filter(id=>Array.isArray(t[id])&&t[id][6]>0).sort((a,b)=>t[b][6]-t[a][6]);
+  if(!ids.length)return '<p class="empty">아직 표시된 과정이 없습니다.</p>';
+  return '<table><thead><tr><th>과정</th><th class="c">희망 인원</th><th class="c">지망 선택 인원</th><th class="c">인당 비용</th></tr></thead><tbody>'+ids.map(id=>{const x=t[id].map(Number);return '<tr><td>'+esc(byId[id].n)+'</td><td class="c"><b>'+x[6]+'</b></td><td class="c">'+(x[1]+x[2]+x[3]+x[4]+x[5])+'</td><td class="c">'+won(WON[id])+'</td></tr>'}).join("")+'</tbody></table>';
+}
+function fmtTime(s){const d=new Date(s);return isNaN(d)?"-":d.toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}
+function buildT(j){
+  const t={},cell=id=>t[id]||(t[id]=[0,0,0,0,0,0,0]);
+  (Array.isArray(j&&j.picks)?j.picks:[]).forEach(x=>{const id=String(x.id),k=Number(x.rk),c=Number(x.cnt)||0;if(!byId[id]||!(k>=1&&k<=5))return;const a=cell(id);a[k]+=c;a[0]+=W[k-1]*c});
+  (Array.isArray(j&&j.shared)?j.shared:[]).forEach(x=>{const id=String(x.id);if(!isUnl(id))return;cell(id)[6]+=Number(x.cnt)||0});
+  return t;
+}
+let sumBusy=false;
+async function loadSummary(){
+  if(!EP){$("r-meta").textContent="응답 저장소가 아직 연결되지 않았습니다.";$("r-rank").innerHTML=rankTable({},false);$("r-shared").innerHTML=sharedTable({});return}
+  if(sumBusy)return;sumBusy=true;$("r-meta").textContent="집계를 불러오는 중입니다.";
+  try{
+    const j=await rpc("survey_summary");
+    const t=buildT(j);
+    $("r-meta").textContent="응답 "+(Number(j.n)||0)+"명 기준 · "+fmtTime(j.at)+" 조회"+(j.closed?" · 조사 마감":"");
+    $("r-rank").innerHTML=rankTable(t,false);$("r-shared").innerHTML=sharedTable(t);
+  }catch(e){$("r-meta").textContent="집계를 불러오지 못했습니다. 새로 고침을 눌러 주세요."}
+  sumBusy=false;
+}
+$("r-reload").addEventListener("click",loadSummary);
+
+/* 관리자 */
+let rows=[];const aState={rank:"all"};
+let roster={},closed=false,akey="";
+const rk=r=>roster[String(r.name||"").replace(/\s+/g,"")]||"기타";
+function readRoster(text){roster={};String(text||"").split(/\n/).forEach(l=>{const m=l.trim().match(/^(\S+)\s+(.+)$/);if(m)roster[m[1]]=m[2].trim().slice(0,20)})}
+async function loadAdmin(){
+  const key=$("akey").value.trim();
+  if(!EP){$("a-sync").textContent="응답 저장소가 아직 연결되지 않았습니다.";return}
+  if(!key){$("a-sync").textContent="관리자 키를 넣어 주세요.";return}
+  $("a-sync").textContent="응답을 불러오는 중입니다.";
+  try{
+    const j=await rpc("admin_rows",{p_key:key});
+    if(!j.ok){$("a-sync").textContent="관리자 키가 맞지 않습니다.";return}
+    akey=key;try{localStorage.setItem("mcAdminKey",key)}catch(e){}
+    rows=(Array.isArray(j.rows)?j.rows:[]).map(r=>({name:String(r.name||""),picks:(r.picks||[]).filter(x=>byId[x]),shared:(r.shared||[]).filter(isUnl),memo:String(r.memo||""),at:String(r.at||"")}));
+    closed=!!j.closed;$("roster").value=String(j.roster||"");readRoster(j.roster);
+    $("a-sync").textContent="응답 "+rows.length+"건을 불러왔습니다.";drawState();
+    $("a-body").hidden=false;drawAdmin();
+  }catch(e){$("a-sync").textContent=e.status===404?"응답 저장소 설정이 끝나지 않았습니다. setup.sql을 실행했는지 확인해 주세요.":"응답을 불러오지 못했습니다. 다시 눌러 주세요."}
+}
+$("aload").addEventListener("click",loadAdmin);
 function drawAdmin(){
   const ranks=[...new Set(rows.map(rk))];
-  if(aState.rank!=="all"&&!ranks.includes(aState.rank))aState.rank="all";
   chips($("a-rank"),"rank",[["all","전체"],...ranks.map(r=>[r,r])],aState,drawAdmin);
   const f=aState.rank,list=rows.filter(r=>f==="all"||rk(r)===f);
-  $("a-course").innerHTML=rankTable(tally(list));
+  $("a-course").innerHTML=rankTable(tally(list),true);
   let h='<table><thead><tr><th>직급</th><th class="c">응답자</th><th>가장 많이 고른 유형</th><th class="c">1지망 비용 합계</th><th class="c">1~3지망 합계</th><th class="c">1~5지망 합계</th><th class="c">비용 미공개 선택</th></tr></thead><tbody>';
   const sum=(g,k)=>{let s=0;g.forEach(r=>(r.picks||[]).slice(0,k).forEach(id=>{if(WON[id]!=null)s+=WON[id]}));return s};
   [...ranks,"all"].forEach(r0=>{
@@ -676,40 +797,57 @@ function drawAdmin(){
     h+='<tr><td>'+(r0==="all"?"<b>전체</b>":esc(r0))+'</td><td class="c">'+g.length+'</td><td>'+(top?esc(CATS.find(c=>c[0]===top)[1].replace(/ \(.*\)/,"")):"-")+'</td><td class="c">'+won(sum(g,1))+'</td><td class="c">'+won(sum(g,3))+'</td><td class="c">'+won(sum(g,5))+'</td><td class="c">'+tbd+'건</td></tr>';
   });
   $("a-budget").innerHTML=h+'</tbody></table>';
-  if(!rows.length){$("a-rows").innerHTML='<p class="empty">아직 넣은 응답이 없습니다.</p>';return}
-  const nm=id=>byId[id]?code(byId[id])+" "+esc(short(byId[id])):"";
-  $("a-rows").innerHTML='<table><thead><tr><th>이름</th><th>직급</th><th>1지망</th><th>2지망</th><th>3지망</th><th>4지망</th><th>5지망</th><th>팀 공용 희망</th><th>의견</th></tr></thead><tbody>'
+  if(!rows.length){$("a-rows").innerHTML='<p class="empty">아직 제출된 응답이 없습니다.</p>';return}
+  const nm=id=>byId[id]?esc(short(byId[id])):"";
+  $("a-rows").innerHTML='<table><thead><tr><th>이름</th><th>직급</th><th>1지망</th><th>2지망</th><th>3지망</th><th>4지망</th><th>5지망</th><th>팀 공용 희망</th><th>의견</th><th>제출</th><th></th></tr></thead><tbody>'
    +rows.map(r=>'<tr><td>'+esc(r.name)+'</td><td>'+esc(rk(r))+'</td>'+[0,1,2,3,4].map(i=>'<td>'+nm((r.picks||[])[i])+'</td>').join("")
-     +'<td>'+(r.shared||[]).map(nm).filter(Boolean).join("<br>")+'</td><td>'+esc(r.memo)+'</td></tr>').join("")+'</tbody></table>';
+     +'<td>'+(r.shared||[]).map(nm).filter(Boolean).join("<br>")+'</td><td>'+esc(r.memo)+'</td><td class="num">'+esc(fmtTime(r.at))+'</td><td><button type="button" class="btn danger" data-del="'+esc(r.name)+'">'+(armDel===r.name?'정말 삭제':'삭제')+'</button></td></tr>').join("")+'</tbody></table>';
 }
+function drawState(){$("a-state").textContent=closed?"현재 상태: 마감됨 (제출 불가)":"현재 상태: 응답 받는 중";$("aclose").textContent=closed?"조사 다시 열기":"조사 마감하기"}
+$("aclose").addEventListener("click",async()=>{
+  try{const j=await rpc("admin_set_closed",{p_key:akey,p_closed:!closed});if(j.ok){closed=!closed;drawState();toast(closed?"조사를 마감했습니다":"조사를 다시 열었습니다")}else toast("관리자 키를 다시 확인해 주세요")}catch(e){toast("바꾸지 못했습니다")}
+});
+$("rsave").addEventListener("click",async()=>{
+  try{const j=await rpc("admin_save_roster",{p_key:akey,p_roster:$("roster").value});$("rmsg").textContent=j.ok?"저장했습니다.":"저장하지 못했습니다."}catch(e){$("rmsg").textContent="저장하지 못했습니다."}
+});
+$("roster").addEventListener("input",()=>{readRoster($("roster").value);$("rmsg").textContent="바꾼 내용은 명단 저장을 눌러야 남습니다.";drawAdmin()});
+let armDel=null;
+$("a-rows").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-del]");if(!b)return;
+  const name=b.dataset.del;
+  if(armDel!==name){armDel=name;drawAdmin();return}
+  armDel=null;
+  try{const j=await rpc("admin_delete",{p_key:akey,p_name:name});if(j.ok){rows=rows.filter(r=>r.name!==name);toast("응답을 삭제했습니다")}else toast("삭제하지 못했습니다")}catch(err){toast("삭제하지 못했습니다")}
+  drawAdmin();
+});
 const full=id=>byId[id]?byId[id].n:"";
 function tableRows(){
-  return [["이름","직급","1지망","2지망","3지망","4지망","5지망","팀 공용 희망","의견","완료 시간"],
-    ...rows.map(r=>[r.name,rk(r),...[0,1,2,3,4].map(i=>full((r.picks||[])[i])),(r.shared||[]).map(full).filter(Boolean).join(" / "),r.memo,r.at])];
+  return [["이름","직급","1지망","2지망","3지망","4지망","5지망","팀 공용 희망","의견","제출 시각"],
+    ...rows.map(r=>[r.name,rk(r),...[0,1,2,3,4].map(i=>full((r.picks||[])[i])),(r.shared||[]).map(full).filter(Boolean).join(" / "),r.memo,fmtTime(r.at)])];
 }
 function courseRows(){
   const t=tally(rows),ids=P.map(p=>p.id).filter(id=>t[id]).sort((a,b)=>t[b][0]-t[a][0]);
-  return [["코드","과정","유형","점수","1지망","2지망","3지망","4지망","5지망","선택 인원","인당 비용(원)","인원×비용(원)","팀 공용 희망"],
-    ...ids.map(id=>{const x=t[id],n=x[1]+x[2]+x[3]+x[4]+x[5],w=WON[id];return [id.toUpperCase(),byId[id].n,CATS.find(c=>c[0]===byId[id].c)[1],x[0],x[1],x[2],x[3],x[4],x[5],n,w==null?"미공개":w,w==null?"미공개":w*n,x[6]]})];
+  return [["과정","유형","점수","1지망","2지망","3지망","4지망","5지망","선택 인원","인당 비용(원)","인원×비용(원)","팀 공용 희망"],
+    ...ids.map(id=>{const x=t[id],n=x[1]+x[2]+x[3]+x[4]+x[5],w=WON[id];return [byId[id].n,CATS.find(c=>c[0]===byId[id].c)[1],x[0],x[1],x[2],x[3],x[4],x[5],n,w==null?"미공개":w,w==null?"미공개":w*n,x[6]]})];
 }
 function rankRows(){
-  const out=[["직급","이름","지망","코드","과정","유형","인당 비용(원)"]];
-  rows.forEach(r=>(r.picks||[]).forEach((id,i)=>{if(byId[id])out.push([rk(r),r.name,i+1,id.toUpperCase(),byId[id].n,CATS.find(c=>c[0]===byId[id].c)[1],WON[id]==null?"미공개":WON[id]])}));
+  const out=[["직급","이름","지망","과정","유형","인당 비용(원)"]];
+  rows.forEach(r=>(r.picks||[]).forEach((id,i)=>{if(byId[id])out.push([rk(r),r.name,i+1,byId[id].n,CATS.find(c=>c[0]===byId[id].c)[1],WON[id]==null?"미공개":WON[id]])}));
   return out;
 }
 function saveFile(name,blob){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+const safe=a=>a.map(r=>r.map(v=>typeof v==="string"&&/^[=+\-@]/.test(v)?"'"+v:v));
 $("xlsx").addEventListener("click",()=>{
   if(!rows.length){toast("내려받을 응답이 없습니다");return}
-  const safe=a=>a.map(r=>r.map(v=>typeof v==="string"&&/^[=+\-@]/.test(v)?"'"+v:v));
   if(window.XLSX){
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(safe(tableRows())),"응답");
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(safe(courseRows())),"과정별 집계");
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(safe(rankRows())),"직급별 지망 목록");
-    XLSX.writeFile(wb,"MC_교육희망조사_분석.xlsx");
+    XLSX.writeFile(wb,"MC_교육희망조사.xlsx");
   }else{
-    const csv=safe(rankRows()).map(r=>r.map(v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
-    saveFile("MC_교육희망조사_분석.csv",new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));
+    const csv=safe(tableRows()).map(r=>r.map(v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+    saveFile("MC_교육희망조사.csv",new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));
     toast("엑셀 형식을 쓸 수 없어 CSV 파일로 저장했습니다");
   }
 });
@@ -718,8 +856,9 @@ $("copy").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText(text);toast("복사했습니다. 엑셀에서 붙여넣기 하세요")}
   catch(err){const bx=$("copybox");bx.hidden=false;bx.value=text;bx.focus();bx.select();toast("아래 상자의 내용을 직접 복사해 주세요")}
 });
-try{$("roster").value=localStorage.getItem("mcSurveyRoster")||"";rows=JSON.parse(localStorage.getItem("mcSurveyRows")||"[]")||[]}catch(e){rows=[]}
-readRoster();drawCourses();drawSurvey();drawAdmin();route();
+try{$("akey").value=localStorage.getItem("mcAdminKey")||""}catch(e){}
+loadMine();drawPicks();drawShared();drawCourses();route();
+if(!EP)$("conn").textContent="응답 저장소가 아직 연결되지 않아 제출과 집계가 꺼져 있습니다. 과정 소개는 그대로 볼 수 있습니다.";
 </script>
 </body>
 </html>
