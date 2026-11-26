@@ -105,6 +105,12 @@ td.c,th.c{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hint{font-size:13.5px;color:var(--muted);margin:0}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:90vw}
 .toast:empty{display:none}
+.guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:0;padding:0;list-style:none;counter-reset:g}
+.guide li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;counter-increment:g}
+.guide li::before{content:counter(g);display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:var(--accent);color:var(--surface);font-weight:700;font-size:13px;margin-right:8px}
+.guide b{font-family:var(--display)}
+.guide p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.gnote{font-size:13.5px;color:var(--muted);margin:10px 0 0}
 .abody{display:flex;flex-direction:column;gap:22px}
 .abody[hidden]{display:none}
 .btn.danger{border-color:var(--warn);color:var(--warn);background:var(--surface);font-weight:500;padding:3px 9px;font-size:12.5px}
@@ -116,6 +122,15 @@ td.c,th.c{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   <h1>MC 교육 희망 조사</h1>
   <p>듣고 싶은 교육 과정을 1지망부터 5지망까지 골라 주세요. 과정 설명을 먼저 보고, 지망 선택 탭에서 제출하면 됩니다.</p>
 </header>
+<section aria-labelledby="g-title">
+  <h2 id="g-title" style="margin-bottom:10px">참여 방법 (약 5분)</h2>
+  <ol class="guide">
+    <li><b>과정 둘러보기</b><p>① 과정 소개 탭에서 관심 있는 과정을 찾아 <b>＋ 지망에 추가</b>를 누릅니다. 위쪽 필터로 유형·직급별로 좁혀 볼 수 있습니다.</p></li>
+    <li><b>지망 정하기</b><p>② 지망 선택 탭에서 이름을 적고, 담아 둔 과정의 순서를 확인합니다. 1지망만 필수이고 5지망까지 고를 수 있습니다.</p></li>
+    <li><b>제출하기</b><p>팀 공용으로 있으면 좋을 온라인 강의와 의견은 원하면 적고, <b>제출</b>을 누르면 끝입니다.</p></li>
+  </ol>
+  <p class="gnote">바꾸고 싶으면 같은 이름으로 다시 제출하세요. 마지막 응답이 반영됩니다. 이름별 응답은 관리자만 보고, ③ 집계 결과 탭에는 과정별 합계만 나옵니다.</p>
+</section>
 <nav class="tabs" aria-label="화면 이동">
   <a href="#courses" data-v="courses">① 과정 소개</a>
   <a href="#survey" data-v="survey">② 지망 선택</a>
